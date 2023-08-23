@@ -42,6 +42,7 @@ RUN pip3 install --upgrade pip && \
 
 RUN echo "jovyan ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/jovyan
 WORKDIR /home/jovyan
+RUN chown -Rv jovyan /home/jovyan
 USER jovyan
 
 CMD ["sh", "-c", \
