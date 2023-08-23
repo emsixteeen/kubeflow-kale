@@ -28,6 +28,10 @@ interface AdvancedSettingsProps {
   dockerChange: Function;
   changeDebug: Function;
   volsPanel: any;
+  cpuRequests: string;
+  cpuRequestsChange: Function;
+  memoryRequests: string;
+  memoryRequestsChange: Function;
 }
 
 export const AdvancedSettings: React.FunctionComponent<AdvancedSettingsProps> = props => {
@@ -56,6 +60,22 @@ export const AdvancedSettings: React.FunctionComponent<AdvancedSettingsProps> = 
           placeholder={props.dockerImageDefaultValue}
           variant="standard"
         />
+
+          <Input
+            label="CPU Requests"
+            updateValue={props.cpuRequestsChange}
+            value={props.cpuRequests}
+            placeholder={'1.0'}
+            variant="standard"
+          />
+
+          <Input
+            label="Memory Requests"
+            updateValue={props.memoryRequestsChange}
+            value={props.memoryRequests}
+            placeholder={'1G'}
+            variant="standard"
+          />
 
         <div className="toolbar" style={{ padding: '12px 4px 0 4px' }}>
           <div className="switch-label">Debug</div>

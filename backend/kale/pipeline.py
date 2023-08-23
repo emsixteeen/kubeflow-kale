@@ -99,6 +99,8 @@ class PipelineConfig(Config):
     experiment_name = Field(type=str, required=True)
     pipeline_description = Field(type=str, default="")
     docker_image = Field(type=str, default="")
+    cpu_requests = Field(type=str, default="1.0")
+    memory_requests = Field(type=str, default="1G")
     volumes = Field(type=list, items_config_type=VolumeConfig, default=[])
     katib_run = Field(type=bool, default=False)
     katib_metadata = Field(type=KatibConfig)

@@ -155,6 +155,8 @@ export interface IKaleNotebookMetadata {
   pipeline_name: string;
   pipeline_description: string;
   docker_image: string;
+  cpu_requests: string;
+  memory_requests: string;
   volumes: IVolumeMetadata[];
   snapshot_volumes: boolean;
   autosnapshot: boolean;
@@ -205,6 +207,8 @@ export const DefaultState: IState = {
     katib_run: false,
     steps_defaults: [],
     volume_access_mode: 'rwm',
+    cpu_requests: '1.0',
+    memory_requests: '1G',
   },
   runDeployment: false,
   deploymentType: 'compile',
@@ -263,6 +267,20 @@ export class KubeflowKaleLeftPanel extends React.Component<IProps, IState> {
       metadata: {
         ...prevState.metadata,
         docker_image: name,
+      },
+    }));
+  updateCpuRequests = (cpu: string) =>
+    this.setState((prevState, props) => ({
+      metadata: {
+        ...prevState.metadata,
+        cpu_requests: cpu,
+      },
+    }));
+  updateMemoryRequests= (memory: string) =>
+    this.setState((prevState, props) => ({
+      metadata: {
+        ...prevState.metadata,
+        memory_requests: memory,
       },
     }));
   updateVolumesSwitch = () => {
@@ -924,6 +942,10 @@ export class KubeflowKaleLeftPanel extends React.Component<IProps, IState> {
                 debug={this.state.deployDebugMessage}
                 volsPanel={volsPanel}
                 changeDebug={this.changeDeployDebugMessage}
+                cpuRequests={this.state.metadata.cpu_requests}
+                cpuRequestsChange={this.updateCpuRequests}
+                memoryRequests={this.state.metadata.memory_requests}
+                memoryRequestsChange={this.updateMemoryRequests}
               />
             </div>
           </div>

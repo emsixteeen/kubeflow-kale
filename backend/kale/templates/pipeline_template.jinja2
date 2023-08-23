@@ -143,6 +143,12 @@ def auto_generated_pipeline({%- for arg in pipeline.pps_names -%}
     for _kale_k, _kale_v in _kale_step_limits.items():
         _kale_{{ step.name }}_task.container.add_resource_limit(_kale_k, _kale_v)
     {%- endif %}
+    {%- if cpu_requests %}
+    _kale_{{ step.name }}_task.container.add_resource_limit('cpu', '{{ cpu_requests }}')
+    {%- endif %}
+    {%- if memory_requests %}
+    _kale_{{ step.name }}_task.container.add_resource_limit('memory', '{{ memory_requests }}')
+    {%- endif %}
     {%- if step.config.retry_count %}
     _kale_{{ step.name }}_task.set_retry_strategy(
         num_retries={{ step.config.retry_count }},
