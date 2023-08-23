@@ -1,0 +1,8 @@
+*
+!docker
+!backend
+backend/build
+backend/kale/**/__pycache__
+!labextension
+labextension/lib
+labextension/node_modules
