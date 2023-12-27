@@ -19,6 +19,10 @@ FROM gcr.io/kubeflow-images-public/tensorflow-1.14.0-notebook-${IMAGE_TYPE}:v0.7
 
 USER root
 
+# Upgrade to 18.04.6
+RUN apt-get update || true
+RUN apt-get upgrade -y
+
 # Install basic dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -52,8 +56,22 @@ RUN jlpm install && \
 
 RUN jupyter lab build --dev-build=False
 
+# Fix versions
+RUN pip install \
+  certifi==2023.7.22 \
+  cryptography==39.0.1 \
+  rsa==4.1
+
 # Cleanup
-RUN rm -Rf /kale
+RUN pip3 cache purge
+RUN apt-get purge -y nodejs kubectl
+RUN rm -Rf \
+  /kale \
+  /tmp/* \
+  /usr/local/share/.cache \
+  /usr/local/share/jupyter/lab/staging \
+  /usr/local/aws
+
 RUN chown -Rv jovyan:users /home/jovyan
 
 RUN echo "jovyan ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/jovyan
