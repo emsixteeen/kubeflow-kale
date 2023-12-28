@@ -33,7 +33,7 @@ setup(
               'kale.sdk',
               ],
     install_requires=[
-        'kfp',
+        'kfp<1.9.0',
         'autopep8 >=1.4, <1.5',
         'astor >= 0.8.1',
         'networkx >=2.3, <3.0',
