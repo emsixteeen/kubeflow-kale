@@ -15,7 +15,8 @@
 # Use tensorflow-1.14.0 as a base image, allowing the user to
 # speficy if they want GPU support, by setting IMAGE_TYPE to "gpu".
 ARG IMAGE_TYPE="cpu"
-FROM gcr.io/kubeflow-images-public/tensorflow-1.14.0-notebook-${IMAGE_TYPE}:v0.7.0
+#FROM gcr.io/kubeflow-images-public/tensorflow-1.14.0-notebook-${IMAGE_TYPE}:v0.7.0
+FROM docker.io/tensorflow/tensorflow:2.11.1
 
 USER root
 
@@ -27,13 +28,13 @@ RUN apt-get upgrade -y
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates bash-completion tar less \
-        python-pip python-setuptools build-essential python-dev \
+        python-setuptools build-essential python-dev \
         python3-pip python3-wheel && \
     rm -rf /var/lib/apt/lists/*
 
 ENV SHELL /bin/bash
 COPY /docker/jupyterlab/bashrc /etc/bash.bashrc
-RUN echo "set background=dark" >> /etc/vim/vimrc.local
+#RUN echo "set background=dark" >> /etc/vim/vimrc.local
 
 # Install latest KFP SDK
 RUN pip3 freeze
@@ -41,39 +42,75 @@ RUN pip3 install --upgrade pip && \
     # XXX: Install enum34==1.1.8 because other versions lead to errors during
     #  KFP installation
     pip3 install --upgrade "enum34==1.1.8" && \
-    pip3 install --upgrade "jupyterlab>=2.0.0,<3.0.0"
+    pip3 install --upgrade "jupyterlab>=2.0.0,<3.0.0" && \
+    pip3 install --upgrade "MarkupSafe<2.1"
 
 # Install Kale from KALE_BRANCH (defaults to "master")
 COPY /backend /kale/backend
 WORKDIR /kale/backend
 RUN pip3 install --upgrade .
 
+RUN apt-get update
+RUN apt-get install -y ca-certificates curl gnupg
+RUN mkdir -p /etc/apt/keyrings
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+RUN apt-get update
+RUN apt-get install nodejs -y
+
 COPY /labextension /kale/labextension
 WORKDIR /kale/labextension
-RUN jlpm install && \
-    jlpm run build && \
-    jupyter labextension install .
+RUN jlpm install 
+RUN jlpm run build 
+RUN jupyter labextension install .
 
 RUN jupyter lab build --dev-build=False
 
 # Fix versions
-RUN pip install \
+#RUN pip install \
+#  certifi==2023.7.22 \
+#  cryptography==39.0.1 \
+#  rsa==4.1
+RUN pip install --no-deps \
+  jupyter-server==1.17.1 \
+  urllib3==1.26.17 \
   certifi==2023.7.22 \
-  cryptography==39.0.1 \
-  rsa==4.1
+  grpcio==1.53.2 \
+  Werkzeug==2.3.8 \
+  'MarkupSafe<2.1'
+
+# Disable extension manager
+RUN jupyter labextension disable @jupyterlab/extensionmanager-extension
 
 # Cleanup
 RUN pip3 cache purge
-RUN apt-get purge -y nodejs kubectl
+RUN apt-get purge -y \
+  nodejs \ 
+#  kubectl \
+#  google-cloud-sdk \
+#  python-pip \
+  python3-pip \
+  python3-wheel
+RUN apt-mark hold python3-idna
+RUN apt-get autoremove -y
+RUN pip uninstall -y pip
+
 RUN rm -Rf \
   /kale \
   /tmp/* \
   /usr/local/share/.cache \
   /usr/local/share/jupyter/lab/staging \
-  /usr/local/aws
+  /usr/local/aws \
+  /usr/share/python-wheels/*
 
+RUN useradd jovyan -g users
+RUN mkdir /home/jovyan
 RUN chown -Rv jovyan:users /home/jovyan
 
+FROM scratch
+COPY --from=0 / /
+
+RUN apt-get install -y sudo
 RUN echo "jovyan ALL=(ALL:ALL) NOPASSWD:ALL" > /etc/sudoers.d/jovyan
 WORKDIR /home/jovyan
 USER jovyan
@@ -82,3 +119,4 @@ CMD ["sh", "-c", \
      "jupyter lab --notebook-dir=/home/jovyan --ip=:: --no-browser \
       --allow-root --port=8888 --LabApp.token='' --LabApp.password='' \
       --LabApp.allow_origin='*' --LabApp.base_url=${NB_PREFIX}"]
+
