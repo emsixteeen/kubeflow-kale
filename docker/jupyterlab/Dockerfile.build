@@ -12,15 +12,11 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# Use tensorflow-1.14.0 as a base image, allowing the user to
-# speficy if they want GPU support, by setting IMAGE_TYPE to "gpu".
-ARG IMAGE_TYPE="cpu"
-#FROM gcr.io/kubeflow-images-public/tensorflow-1.14.0-notebook-${IMAGE_TYPE}:v0.7.0
 FROM docker.io/tensorflow/tensorflow:2.11.1
 
 USER root
 
-# Upgrade to 18.04.6
+# Upgrade system
 RUN apt-get update || true
 RUN apt-get upgrade -y
 
@@ -67,10 +63,6 @@ RUN jupyter labextension install .
 RUN jupyter lab build --dev-build=False
 
 # Fix versions
-#RUN pip install \
-#  certifi==2023.7.22 \
-#  cryptography==39.0.1 \
-#  rsa==4.1
 RUN pip install --no-deps \
   jupyter-server==1.17.1 \
   urllib3==1.26.17 \
@@ -85,12 +77,9 @@ RUN jupyter labextension disable @jupyterlab/extensionmanager-extension
 # Cleanup
 RUN pip3 cache purge
 RUN apt-get purge -y \
-  nodejs 
-#  kubectl \
-#  google-cloud-sdk \
-#  python-pip \
-#  python3-pip \
-#  python3-wheel
+  nodejs \ 
+  python3-pip \
+  python3-wheel
 RUN apt-mark hold python3-idna
 RUN apt-get autoremove -y
 RUN pip uninstall -y pip
